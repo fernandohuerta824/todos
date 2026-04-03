@@ -7,6 +7,7 @@ import java.util.Set;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.boot.webmvc.autoconfigure.WebMvcProperties.Apiversion.Use;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -63,8 +64,6 @@ public class User {
     @Setter(value = AccessLevel.NONE)
     private Date updatedAt;
 
-    @Setter(value = AccessLevel.NONE)
-    @Getter(value = AccessLevel.NONE)
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "users_roles",
@@ -96,6 +95,19 @@ public class User {
         return wasRemoved;
     }
 
+
+    public boolean addRole(Role role) {
+        boolean wasAdded = roles.add(role);
+    
+        return wasAdded;
+    }
+
+    public boolean removeRole(Role role) {
+        boolean wasRemoved = roles.remove(role);
+    
+        return wasRemoved;
+    }
+
     public Set<Todo> getTodos() {
         return Collections.unmodifiableSet(todos);
     }
@@ -103,5 +115,7 @@ public class User {
     public Set<Role> getRoles() {
         return Collections.unmodifiableSet(roles);
     }
+
+
 
 }
