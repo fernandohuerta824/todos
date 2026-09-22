@@ -31,6 +31,11 @@ public class JwtServiceImpl implements JwtService {
         return extractClaim(token, Claims::getSubject);
     }
 
+    private <T> T extractClaim(String token, String key, Class<T> clazz) {
+
+        return extractClaim(token, claims -> claims.get(key, clazz));
+    }
+
     private Claims extractAllClaims (String token) {
         return Jwts.parserBuilder()
             .setSigningKey(getSigningKey())
@@ -75,6 +80,11 @@ public class JwtServiceImpl implements JwtService {
         byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
 
         return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    @Override
+    public Claims getClaims(String token) {
+        return  extractAllClaims(token);
     }
     
 }
