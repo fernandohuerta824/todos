@@ -2,13 +2,15 @@ package com.fernando.todos.serviceImpl;
 
 import java.security.Key;
 import java.util.Date;
-import java.util.Map;
-import java.util.function.Function;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
+import com.fernando.todos.entity.security.UserDetailsImpl;
+import com.fernando.todos.service.JWTPayload;
 import com.fernando.todos.service.JwtService;
 
 import io.jsonwebtoken.Claims;
@@ -26,15 +28,8 @@ public class JwtServiceImpl implements JwtService {
     @Value("${spring.jwt.expiration}")
     private long EXPIRATION;
 
-    @Override
-    public String extractUser(String token) {
-        return extractClaim(token, Claims::getSubject);
-    }
-
-    private <T> T extractClaim(String token, String key, Class<T> clazz) {
-
-        return extractClaim(token, claims -> claims.get(key, clazz));
-    }
+    private final String USER_ID_KEY = "userId";
+    private final String AUTHORITIES_KEY = "authorities";
 
     private Claims extractAllClaims (String token) {
         return Jwts.parserBuilder()
@@ -44,31 +39,27 @@ public class JwtServiceImpl implements JwtService {
             .getBody();
     }
 
-    private <T> T extractClaim(String token, Function<Claims, T> claimResolver) {
-        final Claims claims = extractAllClaims(token);
+    @SuppressWarnings("unchecked")
+	@Override
+    public JWTPayload getJwtPayload(String token) {
+        Claims claims = extractAllClaims(token);
 
-        return claimResolver.apply(claims);
+        return new JWTPayload(
+            claims.get(USER_ID_KEY, Long.class),
+            claims.get(AUTHORITIES_KEY, Set.class),
+            claims.getIssuer(),
+            claims.getSubject(),
+            claims.getIssuedAt(),
+            claims.getExpiration()
+        );
     }
 
     @Override
-    public boolean isTokenValid(String token, UserDetails userDetails) {
-        final String userName = extractUser(token);
-
-        return (userName.equals(userDetails.getUsername())) && !isTokenExpired(token);
-    }
-
-    private boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
-    }
-
-    private Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
-    }
-
-    @Override
-    public String generateToken(Map<String, ?> claims, UserDetails userDetails) {
+    public String generateToken(UserDetailsImpl userDetails) {
        return Jwts.builder()
-            .setClaims(claims)
+            .claim(USER_ID_KEY, userDetails.getId())
+            .claim(AUTHORITIES_KEY, userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toSet()))
+            .setIssuer("Fernando")
             .setSubject(userDetails.getUsername())
             .setIssuedAt(new Date(System.currentTimeMillis()))
             .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION))
@@ -82,9 +73,4 @@ public class JwtServiceImpl implements JwtService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    @Override
-    public Claims getClaims(String token) {
-        return  extractAllClaims(token);
-    }
-    
 }

@@ -18,6 +18,7 @@ import com.fernando.todos.dto.AuthenticationResponse;
 import com.fernando.todos.dto.RegisterRequest;
 import com.fernando.todos.entity.Role;
 import com.fernando.todos.entity.User;
+import com.fernando.todos.entity.security.UserDetailsImpl;
 import com.fernando.todos.repository.UserRepository;
 import com.fernando.todos.service.AuthenticationService;
 import com.fernando.todos.service.JwtService;
@@ -53,9 +54,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
-        UserDetails userDetails = userDetailsService.loadUserByUsername(request.getEmail());
+        UserDetailsImpl userDetails = (UserDetailsImpl) userDetailsService.loadUserByUsername(request.getEmail());
 
-        String token = jwtService.generateToken(new HashMap<>(), userDetails);
+        String token = jwtService.generateToken(userDetails);
 
         return new AuthenticationResponse(token);
     }

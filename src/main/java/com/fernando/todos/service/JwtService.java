@@ -1,17 +1,10 @@
 package com.fernando.todos.service;
 
-import java.util.Map;
-
-import org.springframework.security.core.userdetails.UserDetails;
-
-import io.jsonwebtoken.Claims;
+import com.fernando.todos.entity.security.UserDetailsImpl;
 
 public interface JwtService {
-    String extractUser(String token);
 
-    boolean isTokenValid(String token, UserDetails userDetails);
+    String generateToken(UserDetailsImpl userDetails);
 
-    String generateToken(Map<String, ?> claims, UserDetails userDetails);
-
-    Claims getClaims(String token);
+    JWTPayload getJwtPayload(String token);
 }

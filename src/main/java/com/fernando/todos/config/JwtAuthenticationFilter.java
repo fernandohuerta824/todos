@@ -12,9 +12,9 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.fernando.todos.service.JWTPayload;
 import com.fernando.todos.service.JwtService;
 
-import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -45,15 +45,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         jwt = authHeader.substring(7);
-        final Claims claims;
+        final JWTPayload jwtPayload;
         try {
-
-            claims = jwtService.getClaims(jwt);
+            jwtPayload = jwtService.getJwtPayload(jwt);
         } catch (Exception e) {
             filterChain.doFilter(request, response);
             return;
         }
-        final String userEmail = claims.getSubject();
+        final String userEmail = jwtPayload.subject();
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
 
